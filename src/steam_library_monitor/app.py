@@ -30,8 +30,8 @@ class SteamLibraryMonitor:
         self.emailer = emailer or Emailer(
             config.smtp_host,
             config.smtp_port,
-            config.gmail_username,
-            config.gmail_app_password,
+            config.smtp_username,
+            config.smtp_password,
         )
 
     def initialize(self) -> None:
@@ -71,7 +71,7 @@ class SteamLibraryMonitor:
                     user.display_name,
                 )
                 new_items.extend(account_new_items)
-            message = build_message(new_items, self.config.sender, self.config.email_to)
+            message = build_message(new_items, self.config.sender, self.config.smtp_to)
             if message is not None:
                 self.emailer.send(message)
                 LOGGER.info("Sent digest email with %s new item(s)", len(new_items))

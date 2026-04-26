@@ -21,13 +21,13 @@ class Config:
 
     steam_api_key: str
     steam_users: tuple[SteamUser, ...]
-    gmail_username: str
-    gmail_app_password: str
-    email_to: str
+    smtp_username: str
+    smtp_password: str
+    smtp_to: str
     sleep_interval: int = DEFAULT_SLEEP_INTERVAL
     log_level: str = DEFAULT_LOG_LEVEL
     database_path: str = DEFAULT_DATABASE_PATH
-    email_from: str | None = None
+    smtp_from: str | None = None
     smtp_host: str = DEFAULT_SMTP_HOST
     smtp_port: int = DEFAULT_SMTP_PORT
 
@@ -35,7 +35,7 @@ class Config:
     def sender(self) -> str:
         """Return configured sender address/header."""
 
-        return self.email_from or self.gmail_username
+        return self.smtp_from or self.smtp_username
 
 
 class ConfigError(ValueError):
@@ -48,9 +48,9 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     source = os.environ if env is None else env
     steam_api_key = _required(source, "STEAM_API_KEY")
     steam_users = _parse_steam_users(_required(source, "STEAM_USERS"))
-    gmail_username = _required(source, "GMAIL_USERNAME")
-    gmail_app_password = _required(source, "GMAIL_APP_PASSWORD")
-    email_to = _required(source, "EMAIL_TO")
+    smtp_username = _required(source, "SMTP_USERNAME")
+    smtp_password = _required(source, "SMTP_PASSWORD")
+    smtp_to = _required(source, "SMTP_TO")
 
     sleep_interval = _parse_int(
         source.get("SLEEP_INTERVAL", str(DEFAULT_SLEEP_INTERVAL)),
@@ -70,13 +70,13 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     return Config(
         steam_api_key=steam_api_key,
         steam_users=steam_users,
-        gmail_username=gmail_username,
-        gmail_app_password=gmail_app_password,
-        email_to=email_to,
+        smtp_username=smtp_username,
+        smtp_password=smtp_password,
+        smtp_to=smtp_to,
         sleep_interval=sleep_interval,
         log_level=log_level,
         database_path=source.get("DATABASE_PATH", DEFAULT_DATABASE_PATH),
-        email_from=source.get("EMAIL_FROM") or None,
+        smtp_from=source.get("SMTP_FROM") or None,
         smtp_host=source.get("SMTP_HOST", DEFAULT_SMTP_HOST),
         smtp_port=smtp_port,
     )

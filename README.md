@@ -15,9 +15,9 @@ services:
     environment:
       STEAM_API_KEY: "your-steam-api-key"
       STEAM_USERS: "7656119xxxxxxxxxx=Roommate"
-      GMAIL_USERNAME: "your-gmail@gmail.com"
-      GMAIL_APP_PASSWORD: "your-gmail-app-password"
-      EMAIL_TO: "you@example.com"
+      SMTP_USERNAME: "your-gmail@gmail.com"
+      SMTP_PASSWORD: "your-gmail-app-password"
+      SMTP_TO: "you@example.com"
       SLEEP_INTERVAL: "86400"
       LOG_LEVEL: "WARNING"
       DATABASE_PATH: "/data/library-cache.db"
@@ -60,9 +60,9 @@ Required:
 ```text
 STEAM_API_KEY
 STEAM_USERS
-GMAIL_USERNAME
-GMAIL_APP_PASSWORD
-EMAIL_TO
+SMTP_USERNAME
+SMTP_PASSWORD
+SMTP_TO
 ```
 
 `STEAM_USERS` uses comma-separated `SteamID64=Display Name` entries:
@@ -77,7 +77,7 @@ Optional:
 SLEEP_INTERVAL=86400
 LOG_LEVEL=WARNING
 DATABASE_PATH=/data/library-cache.db
-EMAIL_FROM="Steam Library Monitor <sender@gmail.com>"
+SMTP_FROM="Steam Library Monitor <sender@gmail.com>"
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 ```

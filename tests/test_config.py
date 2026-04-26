@@ -9,9 +9,9 @@ def base_env() -> dict[str, str]:
     return {
         "STEAM_API_KEY": "steam-key",
         "STEAM_USERS": "76561198000000001=Alice",
-        "GMAIL_USERNAME": "sender@gmail.com",
-        "GMAIL_APP_PASSWORD": "app-password",
-        "EMAIL_TO": "recipient@example.com",
+        "SMTP_USERNAME": "sender@gmail.com",
+        "SMTP_PASSWORD": "app-password",
+        "SMTP_TO": "recipient@example.com",
     }
 
 

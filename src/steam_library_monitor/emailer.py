@@ -62,20 +62,20 @@ class Emailer:
         self,
         smtp_host: str,
         smtp_port: int,
-        username: str,
-        app_password: str,
+        smtp_username: str,
+        smtp_password: str,
     ) -> None:
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
-        self.username = username
-        self.app_password = app_password
+        self.smtp_username = smtp_username
+        self.smtp_password = smtp_password
 
     def send(self, message: EmailMessage) -> None:
         """Send an email message over STARTTLS SMTP."""
 
         with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30) as smtp:
             smtp.starttls()
-            smtp.login(self.username, self.app_password)
+            smtp.login(self.smtp_username, self.smtp_password)
             smtp.send_message(message)
 
 
