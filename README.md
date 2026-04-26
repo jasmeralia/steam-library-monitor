@@ -31,27 +31,27 @@ The container runs as a non-root system user. The host directory bound to `/data
 
 ## Steam Setup
 
-Get a Steam Web API key from Steam's Web API key page. If Steam prompts for a domain, follow Steam's instructions; personal deployments often use a placeholder domain.
+Get a Steam Web API key from the [Steam Web API key page](https://steamcommunity.com/dev/apikey). If Steam prompts for a domain, follow Steam's instructions; personal deployments often use a placeholder domain.
 
 Find each account's SteamID64 in one of two ways:
 
 - For vanity profile URLs, call `ResolveVanityURL`:
 
 ```text
-https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=YOUR_KEY&vanityurl=epeternally
+https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=YOUR_KEY&vanityurl=steamusername
 ```
 
 - Or use a lookup site such as SteamID.io.
 
 The target Steam profile must be public, and the account's Game Details privacy setting must be public.
 
-## Gmail Setup
+## SMTP Setup
 
-Use a Gmail app password, not your normal account password.
+For Gmail, use an app password rather than your account password:
 
-1. Enable 2-Step Verification for the Gmail account.
+1. Enable 2-Step Verification on the account.
 2. Create an app password for mail.
-3. Set that app password as `GMAIL_APP_PASSWORD`.
+3. Set that app password as `SMTP_PASSWORD`.
 
 ## Environment
 
