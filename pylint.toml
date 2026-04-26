@@ -1,0 +1,16 @@
+[main]
+py-version = "3.12"
+source-roots = ["src"]
+
+[messages_control]
+disable = [
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "too-few-public-methods",
+  "too-many-instance-attributes",
+  "use-implicit-booleaness-not-comparison",
+]
+
+[format]
+max-line-length = 96

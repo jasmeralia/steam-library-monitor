@@ -1,0 +1,16 @@
+services:
+  steam-library-monitor:
+    image: ghcr.io/jasmeralia/steam-library-monitor:latest
+    container_name: steam-library-monitor
+    restart: unless-stopped
+    environment:
+      STEAM_API_KEY: "your-steam-api-key"
+      STEAM_USERS: "7656119xxxxxxxxxx=Roommate"
+      GMAIL_USERNAME: "your-gmail@gmail.com"
+      GMAIL_APP_PASSWORD: "your-gmail-app-password"
+      EMAIL_TO: "you@example.com"
+      SLEEP_INTERVAL: "86400"
+      LOG_LEVEL: "WARNING"
+      DATABASE_PATH: "/data/library-cache.db"
+    volumes:
+      - /mnt/myzmirror/steam:/data

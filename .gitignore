@@ -1,0 +1,31 @@
+# Python bytecode and tool caches
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local virtual environments
+.venv/
+venv/
+
+# Build/package outputs
+build/
+dist/
+*.egg-info/
+
+# Local environment and runtime data
+.env
+*.db
+*.sqlite
+*.sqlite3
+library-cache.db
+
+# OS/editor noise
+.DS_Store
+
+# Local agent/tool state
+.serena/
+.codex/
