@@ -83,7 +83,7 @@ SMTP_PORT=587
 APPDETAILS_DELAY=1.5
 ```
 
-`APPDETAILS_DELAY` controls the pause in seconds between consecutive Steam Store API calls when classifying new apps. The default of 1.5 seconds keeps the service within Steam's undocumented rate limits. Reduce it only if you have confirmed headroom; set it to 0 to disable the delay entirely.
+`APPDETAILS_DELAY` controls the pause in seconds between consecutive Steam Store API calls when classifying new apps. Apps with a definitive non-game type (e.g. `advertising`, `tool`) are cached so they are not re-fetched on subsequent scans. Apps where the Store API returns no data (`app_type` unknown) are not cached and will be retried each scan. The default of 1.5 seconds keeps the service within Steam's undocumented rate limits. Reduce it only if you have confirmed headroom; set it to 0 to disable the delay entirely.
 
 ## Development
 

@@ -98,6 +98,13 @@ class Database:
                 (utc_now(), status, message, run_id),
             )
 
+    def cache_app(self, app: AppInfo) -> None:
+        """Persist app metadata without linking it to any account."""
+
+        now = utc_now()
+        with self.connect() as connection:
+            _upsert_app(connection, app, now)
+
     def get_app(self, app_id: int) -> AppInfo | None:
         """Return stored app metadata for app_id, if present."""
 

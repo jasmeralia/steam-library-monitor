@@ -149,7 +149,8 @@ Use the returned `data.type` when available:
 
 - `game` -> group under Games.
 - `dlc` -> group under DLC.
-- Other values may be ignored by default or logged at debug level.
+- Other definitive values (`advertising`, `tool`, `config`, `demo`, `music`, `video`, etc.) are ignored for notification purposes but still written to the `apps` table so they are not re-fetched on subsequent scans.
+- `null` type (Store API returned `success: false`) is treated as a transient/unknown result and is NOT cached — the app will be re-fetched on the next scan in case it later becomes available.
 
 For DLC, also capture the base game when available from Store metadata. Possible fields to inspect:
 

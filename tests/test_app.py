@@ -69,6 +69,60 @@ class TestRunForeverSurvivesPollFailure:
         assert poll_count == 2
 
 
+class TestCacheApp:
+    """cache_app is called only for apps with a known (non-None) app_type."""
+
+    def test_cache_app_not_called_when_app_type_none(self) -> None:
+        config = _make_config()
+        monitor = SteamLibraryMonitor(config)
+
+        owned_game = OwnedGame(app_id=10, title="Unknown App")
+        unknown_app = AppInfo(
+            app_id=10,
+            title="Unknown App",
+            app_type=None,
+            store_url="https://store.steampowered.com/app/10/",
+        )
+
+        with (
+            patch.object(monitor.database, "start_poll_run", return_value=1),
+            patch.object(monitor.database, "finish_poll_run"),
+            patch.object(monitor.database, "sync_account_apps", return_value=[]),
+            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "cache_app") as mock_cache_app,
+            patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
+            patch.object(monitor.steam_client, "get_app_details", return_value=unknown_app),
+        ):
+            monitor.poll_once()
+
+        mock_cache_app.assert_not_called()
+
+    def test_cache_app_called_for_known_non_game_type(self) -> None:
+        config = _make_config()
+        monitor = SteamLibraryMonitor(config)
+
+        owned_game = OwnedGame(app_id=10, title="Ad App")
+        ad_app = AppInfo(
+            app_id=10,
+            title="Ad App",
+            app_type="advertising",
+            store_url="https://store.steampowered.com/app/10/",
+        )
+
+        with (
+            patch.object(monitor.database, "start_poll_run", return_value=1),
+            patch.object(monitor.database, "finish_poll_run"),
+            patch.object(monitor.database, "sync_account_apps", return_value=[]),
+            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "cache_app") as mock_cache_app,
+            patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
+            patch.object(monitor.steam_client, "get_app_details", return_value=ad_app),
+        ):
+            monitor.poll_once()
+
+        mock_cache_app.assert_called_once_with(ad_app)
+
+
 class TestAppdetailsDelay:
     """poll_once sleeps before each unknown app's get_app_details call."""
 
@@ -85,6 +139,7 @@ class TestAppdetailsDelay:
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
             patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "cache_app"),
             patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
             patch.object(monitor.steam_client, "get_app_details", return_value=app_info),
             patch("steam_library_monitor.app.time.sleep") as mock_sleep,
@@ -128,6 +183,7 @@ class TestAppdetailsDelay:
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
             patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "cache_app"),
             patch.object(monitor.steam_client, "get_owned_games", return_value=owned_games),
             patch.object(
                 monitor.steam_client, "get_app_details", side_effect=fake_get_app_details

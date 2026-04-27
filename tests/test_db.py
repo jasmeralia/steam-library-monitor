@@ -84,6 +84,21 @@ def test_second_sync_with_new_app_emits_new_item(tmp_path: Path) -> None:
     assert new_items[0].app.app_id == 11
 
 
+def test_cache_app_persists_without_account_link(tmp_path: Path) -> None:
+    database = Database(str(tmp_path / "cache.db"))
+    database.initialize()
+    ignored_app = AppInfo(
+        app_id=99,
+        title="Promo Ad",
+        app_type="advertising",
+        store_url="https://store.steampowered.com/app/99/",
+    )
+
+    database.cache_app(ignored_app)
+
+    assert database.get_app(99) == ignored_app
+
+
 def test_tracks_per_account_app_additions_separately(tmp_path: Path) -> None:
     database = Database(str(tmp_path / "cache.db"))
     database.initialize()
