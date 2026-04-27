@@ -56,6 +56,7 @@ DATABASE_PATH: "/data/library-cache.db"
 SMTP_FROM: "Steam Library Monitor <sender@gmail.com>"
 SMTP_HOST: "smtp.gmail.com"
 SMTP_PORT: "587"
+APPDETAILS_DELAY: "1.5"
 ```
 
 ### Steam users format

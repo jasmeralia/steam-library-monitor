@@ -52,6 +52,7 @@ class SteamLibraryMonitor:
                 for owned_game in owned_games:
                     app_info = self.database.get_app(owned_game.app_id)
                     if app_info is None:
+                        time.sleep(self.config.appdetails_delay)
                         app_info = self.steam_client.get_app_details(
                             owned_game.app_id,
                             owned_game.title,
@@ -89,6 +90,9 @@ class SteamLibraryMonitor:
         self.initialize()
         LOGGER.info("Starting steam-library-monitor")
         while True:
-            self.poll_once()
+            try:
+                self.poll_once()
+            except Exception:  # pylint: disable=broad-exception-caught
+                LOGGER.error("Poll failed; will retry after sleep interval")
             LOGGER.debug("Sleeping for %s seconds", self.config.sleep_interval)
             time.sleep(self.config.sleep_interval)

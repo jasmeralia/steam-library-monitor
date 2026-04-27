@@ -13,6 +13,7 @@ DEFAULT_LOG_LEVEL = "WARNING"
 DEFAULT_DATABASE_PATH = "/data/library-cache.db"
 DEFAULT_SMTP_HOST = "smtp.gmail.com"
 DEFAULT_SMTP_PORT = 587
+DEFAULT_APPDETAILS_DELAY = 1.5
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,7 @@ class Config:
     smtp_from: str | None = None
     smtp_host: str = DEFAULT_SMTP_HOST
     smtp_port: int = DEFAULT_SMTP_PORT
+    appdetails_delay: float = DEFAULT_APPDETAILS_DELAY
 
     @property
     def sender(self) -> str:
@@ -66,6 +68,11 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
     valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
     if log_level not in valid_levels:
         raise ConfigError(f"LOG_LEVEL must be one of {', '.join(sorted(valid_levels))}")
+    appdetails_delay = _parse_float(
+        source.get("APPDETAILS_DELAY", str(DEFAULT_APPDETAILS_DELAY)),
+        "APPDETAILS_DELAY",
+        minimum=0.0,
+    )
 
     return Config(
         steam_api_key=steam_api_key,
@@ -79,6 +86,7 @@ def load_config(env: Mapping[str, str] | None = None) -> Config:
         smtp_from=source.get("SMTP_FROM") or None,
         smtp_host=source.get("SMTP_HOST", DEFAULT_SMTP_HOST),
         smtp_port=smtp_port,
+        appdetails_delay=appdetails_delay,
     )
 
 
@@ -87,6 +95,16 @@ def _required(env: Mapping[str, str], name: str) -> str:
     if not value:
         raise ConfigError(f"{name} is required")
     return value
+
+
+def _parse_float(value: str, name: str, minimum: float) -> float:
+    try:
+        parsed = float(value)
+    except ValueError as exc:
+        raise ConfigError(f"{name} must be a number") from exc
+    if parsed < minimum:
+        raise ConfigError(f"{name} must be >= {minimum}")
+    return parsed
 
 
 def _parse_int(value: str, name: str, minimum: int) -> int:
