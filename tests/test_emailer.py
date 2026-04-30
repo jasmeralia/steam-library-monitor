@@ -32,11 +32,12 @@ def test_render_digest_groups_by_account_and_type() -> None:
         ]
     )
 
-    assert "## Alice" in body
-    assert "Games:\n- Example Game" in body
-    assert "DLC:\n- Example DLC" in body
+    assert "<h2>Alice</h2>" in body
+    assert "<h3>Games</h3>" in body
+    assert '<a href="https://store.steampowered.com/app/10/">Example Game</a>' in body
+    assert "<h3>DLC</h3>" in body
+    assert '<a href="https://store.steampowered.com/app/20/">Example DLC</a>' in body
     assert "Base game: Example Game" in body
-    assert "https://store.steampowered.com/app/10/" in body
 
 
 def test_render_digest_uses_unknown_base_game_text() -> None:
@@ -45,11 +46,19 @@ def test_render_digest_uses_unknown_base_game_text() -> None:
     assert "Base game: Base game unknown" in body
 
 
+def test_render_digest_escapes_html() -> None:
+    body = render_digest([new_app("Alice & Bob", 10, "<Example Game>", "game")])
+
+    assert "Alice &amp; Bob" in body
+    assert "&lt;Example Game&gt;" in body
+    assert "<Example Game>" not in body
+
+
 def test_build_message_returns_none_when_no_items() -> None:
     assert build_message([], "sender@example.com", "to@example.com") is None
 
 
-def test_build_message_subject_has_count() -> None:
+def test_build_message_uses_html_body() -> None:
     message = build_message(
         [new_app("Alice", 10, "Example Game", "game")],
         "sender@example.com",
@@ -58,3 +67,6 @@ def test_build_message_subject_has_count() -> None:
 
     assert message is not None
     assert message["Subject"] == "Steam Library Monitor: 1 new item(s)"
+    assert message.get_content_type() == "text/html"
+    assert not message.is_multipart()
+    assert "<html" in message.get_content()
