@@ -111,6 +111,7 @@ def _render_app_list_item(item: NewApp, include_base_game: bool) -> str:
     title = escape(item.app.title)
     store_url = escape(item.app.store_url, quote=True)
     parts = [f'<li><a href="{store_url}">{title}</a>']
+    parts.append(f'<div class="metadata">{store_url}</div>')
     if include_base_game:
         base_title = escape(item.app.base_title or "Base game unknown")
         parts.append(f'<div class="metadata">Base game: {base_title}</div>')
