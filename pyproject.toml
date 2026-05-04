@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "steam-library-monitor"
-version = "1.0.5"
+version = "1.0.6"
 description = "Monitor public Steam libraries and email newly detected games and DLC."
 readme = "README.md"
 requires-python = ">=3.12"
