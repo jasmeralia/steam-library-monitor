@@ -50,7 +50,7 @@ def render_digest(items: Iterable[NewApp]) -> str:
 </head>
 <body>
   <h1>Steam Library Monitor found new library additions.</h1>
-  {''.join(sections)}
+  {"".join(sections)}
 </body>
 </html>
 """
