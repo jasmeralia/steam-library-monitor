@@ -4,13 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    auto-merge: enable
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+    auto-merge: enable
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    auto-merge: enable
