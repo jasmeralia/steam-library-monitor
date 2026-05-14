@@ -22,3 +22,8 @@ make build
 - Do not run individual tools directly as the initial validation path.
 - Keep README and Compose examples updated when config changes.
 - Preserve SQLite schema compatibility; add migrations carefully.
+
+## Git Workflow
+
+- Never push commits directly to `master`. Always open a pull request from a feature/fix branch.
+- Use squash merge strategy when merging pull requests.
