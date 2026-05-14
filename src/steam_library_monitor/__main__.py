@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# pylint: disable=wrong-import-position
 from steam_library_monitor.app import SteamLibraryMonitor  # noqa: E402
 from steam_library_monitor.config import ConfigError, load_config  # noqa: E402
 from steam_library_monitor.logging_config import configure_logging  # noqa: E402
+# pylint: enable=wrong-import-position
 
 
 def main() -> int:
