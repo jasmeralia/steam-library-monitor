@@ -128,3 +128,22 @@ Tags pushed as `v1.0.0` publish Docker tag `1.0.0`.
 - Empty library results usually mean the Steam profile or Game Details privacy setting is private.
 - No email after startup is expected when the first run only creates the baseline.
 - Gmail authentication failures usually mean 2-Step Verification or the app password is not configured correctly.
+
+## Using a .env file
+
+Rather than embedding credentials in your `docker-compose.yml`, you can store them in a `.env` file and bind-mount it into the container:
+
+```bash
+cp .env.example .env
+# edit .env with your values
+```
+
+```yaml
+services:
+  app:
+    image: ghcr.io/jasmeralia/steam-library-monitor:latest
+    volumes:
+      - /path/to/your/.env:/app/.env:ro
+```
+
+The app loads `/app/.env` automatically on startup. Any value in `.env` can still be overridden by an explicit `environment:` entry in your Compose file.
