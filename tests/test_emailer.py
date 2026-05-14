@@ -4,12 +4,13 @@ from steam_library_monitor.emailer import build_message, render_digest
 from steam_library_monitor.models import AppInfo, NewApp
 
 
-def new_app(
+def new_app(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     display_name: str,
     app_id: int,
     title: str,
     app_type: str,
     base_title: str | None = None,
+    release_year: int | None = None,
 ) -> NewApp:
     return NewApp(
         steam_id="76561198000000001",
@@ -20,8 +21,20 @@ def new_app(
             app_type=app_type,
             store_url=f"https://store.steampowered.com/app/{app_id}/",
             base_title=base_title,
+            release_year=release_year,
         ),
     )
+
+
+def test_app_info_cover_url() -> None:
+    app = AppInfo(
+        app_id=570,
+        title="Dota 2",
+        app_type="game",
+        store_url="https://store.steampowered.com/app/570/",
+    )
+
+    assert app.cover_url == "https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg"
 
 
 def test_render_digest_groups_by_account_and_type() -> None:
@@ -34,9 +47,11 @@ def test_render_digest_groups_by_account_and_type() -> None:
 
     assert "<h2>Alice</h2>" in body
     assert "<h3>Games</h3>" in body
-    assert '<a href="https://store.steampowered.com/app/10/">Example Game</a>' in body
+    assert 'href="https://store.steampowered.com/app/10/"' in body
+    assert ">Example Game</a>" in body
     assert "<h3>DLC</h3>" in body
-    assert '<a href="https://store.steampowered.com/app/20/">Example DLC</a>' in body
+    assert 'href="https://store.steampowered.com/app/20/"' in body
+    assert ">Example DLC</a>" in body
     assert "Base game: Example Game" in body
 
 
@@ -52,6 +67,33 @@ def test_render_digest_escapes_html() -> None:
     assert "Alice &amp; Bob" in body
     assert "&lt;Example Game&gt;" in body
     assert "<Example Game>" not in body
+
+
+def test_render_digest_includes_cover_art() -> None:
+    body = render_digest([new_app("Alice", 10, "Example Game", "game")])
+
+    assert 'src="https://cdn.akamai.steamstatic.com/steam/apps/10/header.jpg"' in body
+    assert 'alt="Example Game"' in body
+    assert 'width="100%"' in body
+
+
+def test_render_digest_shows_release_year() -> None:
+    body = render_digest([new_app("Alice", 10, "Example Game", "game", release_year=2023)])
+
+    assert "2023" in body
+
+
+def test_render_digest_omits_year_when_unknown() -> None:
+    body = render_digest([new_app("Alice", 10, "Example Game", "game")])
+
+    assert "release_year" not in body
+
+
+def test_render_digest_uses_grid_table() -> None:
+    body = render_digest([new_app("Alice", i, f"Game {i}", "game") for i in range(1, 5)])
+
+    assert "<table" in body
+    assert "<td" in body
 
 
 def test_build_message_returns_none_when_no_items() -> None:

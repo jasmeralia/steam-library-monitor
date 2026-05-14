@@ -30,6 +30,33 @@ def test_creates_schema_on_empty_db(tmp_path: Path) -> None:
     assert {"accounts", "apps", "account_apps", "poll_runs"}.issubset(tables)
 
 
+def test_migration_adds_release_year_to_existing_db(tmp_path: Path) -> None:
+    db_path = tmp_path / "legacy.db"
+    with sqlite3.connect(db_path) as connection:
+        connection.execute(
+            """
+            CREATE TABLE apps (
+                app_id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                app_type TEXT,
+                store_url TEXT NOT NULL,
+                base_app_id INTEGER,
+                base_title TEXT,
+                raw_json TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+
+    database = Database(str(db_path))
+    database.initialize()
+
+    with sqlite3.connect(db_path) as connection:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(apps)")}
+    assert "release_year" in columns
+
+
 def test_first_sync_inserts_baseline_without_notification(tmp_path: Path) -> None:
     database = Database(str(tmp_path / "cache.db"))
     database.initialize()

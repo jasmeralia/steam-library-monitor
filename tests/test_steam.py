@@ -70,6 +70,29 @@ def test_parses_appdetails_game_response() -> None:
 
     assert app.app_type == "game"
     assert app.title == "Example Game"
+    assert app.release_year is None
+
+
+def test_parses_release_year_from_appdetails() -> None:
+    session = FakeSession(
+        [
+            {
+                "10": {
+                    "success": True,
+                    "data": {
+                        "type": "game",
+                        "name": "Example Game",
+                        "release_date": {"coming_soon": False, "date": "29 Mar, 2020"},
+                    },
+                }
+            }
+        ]
+    )
+    client = SteamClient("secret", session=session)
+
+    app = client.get_app_details(10, "Fallback")
+
+    assert app.release_year == 2020
 
 
 def test_parses_appdetails_dlc_response_with_base_game() -> None:
