@@ -10,6 +10,9 @@ from html import escape
 
 from steam_library_monitor.models import NewApp
 
+_GRID_COLUMNS = 3
+_COL_WIDTH = f"{100 // _GRID_COLUMNS}%"
+
 
 def render_digest(items: Iterable[NewApp]) -> str:
     """Render an HTML digest body."""
@@ -42,8 +45,6 @@ def render_digest(items: Iterable[NewApp]) -> str:
     h1 {{ font-size: 20px; margin: 0 0 16px; }}
     h2 {{ font-size: 16px; margin: 24px 0 8px; }}
     h3 {{ font-size: 14px; margin: 16px 0 8px; }}
-    ul {{ margin: 0; padding-left: 20px; }}
-    li {{ margin: 0 0 8px; }}
     a {{ color: #1a73e8; }}
     .metadata {{ color: #5f6368; font-size: 13px; margin-top: 2px; }}
   </style>
@@ -103,17 +104,50 @@ def _render_app_group(
     *,
     include_base_game: bool = False,
 ) -> str:
-    entries = "".join(_render_app_list_item(item, include_base_game) for item in items)
-    return f"<h3>{escape(heading)}</h3><ul>{entries}</ul>"
+    grid = _render_grid(items, include_base_game)
+    return f"<h3>{escape(heading)}</h3>{grid}"
 
 
-def _render_app_list_item(item: NewApp, include_base_game: bool) -> str:
+def _render_grid(items: list[NewApp], include_base_game: bool) -> str:
+    cells = [_render_card(item, include_base_game) for item in items]
+    remainder = len(cells) % _GRID_COLUMNS
+    if remainder:
+        cells.extend(
+            [f'<td width="{_COL_WIDTH}" style="width:{_COL_WIDTH};padding:6px;"></td>']
+            * (_GRID_COLUMNS - remainder)
+        )
+    rows = [
+        f"<tr>{''.join(cells[i : i + _GRID_COLUMNS])}</tr>"
+        for i in range(0, len(cells), _GRID_COLUMNS)
+    ]
+    return (
+        '<table width="100%" cellpadding="0" cellspacing="0" role="presentation"'
+        ' style="border-collapse:collapse;">' + "".join(rows) + "</table>"
+    )
+
+
+def _render_card(item: NewApp, include_base_game: bool) -> str:
     title = escape(item.app.title)
     store_url = escape(item.app.store_url, quote=True)
-    parts = [f'<li><a href="{store_url}">{title}</a>']
-    parts.append(f'<div class="metadata">{store_url}</div>')
+    cover_url = escape(item.app.cover_url, quote=True)
+    meta_parts: list[str] = [
+        f'<div style="font-weight:700;font-size:14px;">'
+        f'<a href="{store_url}" style="color:#202124;text-decoration:none;">{title}</a>'
+        f"</div>",
+    ]
+    if item.app.release_year is not None:
+        meta_parts.append(
+            f'<div style="color:#5f6368;font-size:12px;margin-top:3px;">'
+            f"{item.app.release_year}</div>"
+        )
     if include_base_game:
         base_title = escape(item.app.base_title or "Base game unknown")
-        parts.append(f'<div class="metadata">Base game: {base_title}</div>')
-    parts.append("</li>")
-    return "".join(parts)
+        meta_parts.append(f'<div class="metadata">Base game: {base_title}</div>')
+    return (
+        f'<td width="{_COL_WIDTH}" style="width:{_COL_WIDTH};padding:6px;vertical-align:top;">'
+        '<div style="border:2px solid #dadce0;border-radius:8px;overflow:hidden;">'
+        f'<a href="{store_url}" style="display:block;line-height:0;">'
+        f'<img src="{cover_url}" alt="{title}" width="100%"'
+        f' style="display:block;border:0;width:100%;" /></a>'
+        '<div style="padding:8px 10px;">' + "".join(meta_parts) + "</div></div></td>"
+    )

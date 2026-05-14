@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS apps (
     base_app_id INTEGER,
     base_title TEXT,
     raw_json TEXT,
+    release_year INTEGER,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -71,6 +72,7 @@ class Database:
 
         with self.connect() as connection:
             connection.executescript(SCHEMA)
+            _apply_migrations(connection)
 
     def start_poll_run(self) -> int:
         """Record a poll run start and return its row id."""
@@ -112,7 +114,7 @@ class Database:
             row = connection.execute(
                 """
                 SELECT app_id, title, app_type, store_url, base_app_id,
-                    base_title, raw_json
+                    base_title, raw_json, release_year
                 FROM apps
                 WHERE app_id = ?
                 """,
@@ -128,6 +130,7 @@ class Database:
             base_app_id=row["base_app_id"],
             base_title=row["base_title"],
             raw_json=row["raw_json"],
+            release_year=row["release_year"],
         )
 
     def sync_account_apps(
@@ -201,6 +204,12 @@ def _account_exists(connection: sqlite3.Connection, steam_id: str) -> bool:
     )
 
 
+def _apply_migrations(connection: sqlite3.Connection) -> None:
+    existing = {row[1] for row in connection.execute("PRAGMA table_info(apps)")}
+    if "release_year" not in existing:
+        connection.execute("ALTER TABLE apps ADD COLUMN release_year INTEGER")
+
+
 def _upsert_account(connection: sqlite3.Connection, user: SteamUser, now: str) -> None:
     connection.execute(
         """
@@ -222,9 +231,9 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
         """
         INSERT INTO apps (
             app_id, title, app_type, store_url, base_app_id, base_title,
-            raw_json, created_at, updated_at
+            raw_json, release_year, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(app_id) DO UPDATE SET
             title = excluded.title,
             app_type = excluded.app_type,
@@ -232,6 +241,7 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
             base_app_id = excluded.base_app_id,
             base_title = excluded.base_title,
             raw_json = excluded.raw_json,
+            release_year = excluded.release_year,
             updated_at = excluded.updated_at
         """,
         (
@@ -242,6 +252,7 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
             app.base_app_id,
             app.base_title,
             raw_json,
+            app.release_year,
             now,
             now,
         ),

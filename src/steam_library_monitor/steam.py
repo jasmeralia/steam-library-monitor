@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Protocol
 from urllib.parse import urlencode
 
@@ -121,17 +122,18 @@ class SteamClient:
 
         data: dict[str, Any] = app_payload.get("data") or {}
         app_type = data.get("type")
-        fullgame_value = data.get("fullgame")
-        fullgame: dict[str, Any] = fullgame_value if isinstance(fullgame_value, dict) else {}
+        fullgame = _parse_fullgame(data)
         base_app_id = fullgame.get("appid")
         base_title = fullgame.get("name")
         title = str(data.get("name") or fallback_title)
+        release_year = _parse_release_year(data)
         LOGGER.debug(
-            "Classified app_id=%s title=%r type=%r base=%r",
+            "Classified app_id=%s title=%r type=%r base=%r year=%r",
             app_id,
             title,
             app_type,
             base_title,
+            release_year,
         )
         return AppInfo(
             app_id=app_id,
@@ -141,6 +143,7 @@ class SteamClient:
             base_app_id=int(base_app_id) if base_app_id is not None else None,
             base_title=str(base_title) if base_title else None,
             raw_json=json.dumps(app_payload, sort_keys=True),
+            release_year=release_year,
         )
 
 
@@ -149,3 +152,14 @@ def redact_query(params: dict[str, str]) -> str:
 
     redacted = {key: ("<redacted>" if key == "key" else value) for key, value in params.items()}
     return urlencode(redacted)
+
+
+def _parse_fullgame(data: dict[str, Any]) -> dict[str, Any]:
+    value = data.get("fullgame")
+    return value if isinstance(value, dict) else {}
+
+
+def _parse_release_year(data: dict[str, Any]) -> int | None:
+    date_str = str((data.get("release_date") or {}).get("date") or "")
+    match = re.search(r"\b((?:19|20)\d{2})\b", date_str)
+    return int(match.group(1)) if match else None
