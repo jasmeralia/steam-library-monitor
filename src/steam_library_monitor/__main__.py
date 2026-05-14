@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import sys
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from steam_library_monitor.app import SteamLibraryMonitor
 from steam_library_monitor.config import ConfigError, load_config
 from steam_library_monitor.logging_config import configure_logging
