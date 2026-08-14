@@ -95,6 +95,8 @@ make test
 make build
 ```
 
+`make test` reports coverage locally and writes `coverage.xml` for Codecov.
+
 For code changes, run:
 
 ```bash
