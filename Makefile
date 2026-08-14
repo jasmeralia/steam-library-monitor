@@ -25,7 +25,7 @@ lint: install
 	fi
 
 test: install
-	.venv/bin/pytest
+	.venv/bin/pytest --cov=steam_library_monitor --cov-report=term-missing --cov-report=xml:coverage.xml
 
 build: lint
 	docker build -t $(IMAGE) .
