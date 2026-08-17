@@ -6,4 +6,4 @@ mypy==2.3.0
 pylint==4.0.7
 types-requests==2.33.0.20260712
 
-pydantic-settings>=2.14.2
+pydantic-settings>=2.15.0
