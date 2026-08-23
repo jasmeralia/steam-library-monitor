@@ -122,16 +122,24 @@ class Database:
             ).fetchone()
         if row is None:
             return None
-        return AppInfo(
-            app_id=row["app_id"],
-            title=row["title"],
-            app_type=row["app_type"],
-            store_url=row["store_url"],
-            base_app_id=row["base_app_id"],
-            base_title=row["base_title"],
-            raw_json=row["raw_json"],
-            release_year=row["release_year"],
-        )
+        return _app_info_from_row(row, include_raw_json=True)
+
+    def get_app_summary(self, app_id: int) -> AppInfo | None:
+        """Return stored app metadata without loading the raw_json blob."""
+
+        with self.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT app_id, title, app_type, store_url, base_app_id,
+                    base_title, release_year
+                FROM apps
+                WHERE app_id = ?
+                """,
+                (app_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return _app_info_from_row(row, include_raw_json=False)
 
     def sync_account_apps(
         self,
@@ -210,6 +218,19 @@ def _apply_migrations(connection: sqlite3.Connection) -> None:
         connection.execute("ALTER TABLE apps ADD COLUMN release_year INTEGER")
 
 
+def _app_info_from_row(row: sqlite3.Row, *, include_raw_json: bool) -> AppInfo:
+    return AppInfo(
+        app_id=row["app_id"],
+        title=row["title"],
+        app_type=row["app_type"],
+        store_url=row["store_url"],
+        base_app_id=row["base_app_id"],
+        base_title=row["base_title"],
+        raw_json=row["raw_json"] if include_raw_json else None,
+        release_year=row["release_year"],
+    )
+
+
 def _upsert_account(connection: sqlite3.Connection, user: SteamUser, now: str) -> None:
     connection.execute(
         """
@@ -240,7 +261,7 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
             store_url = excluded.store_url,
             base_app_id = excluded.base_app_id,
             base_title = excluded.base_title,
-            raw_json = excluded.raw_json,
+            raw_json = COALESCE(excluded.raw_json, apps.raw_json),
             release_year = excluded.release_year,
             updated_at = excluded.updated_at
         """,

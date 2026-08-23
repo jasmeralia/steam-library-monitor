@@ -88,6 +88,48 @@ def test_get_app_returns_stored_app_info(tmp_path: Path) -> None:
     assert database.get_app(10) == app_info
 
 
+def test_get_app_summary_omits_raw_json(tmp_path: Path) -> None:
+    database = Database(str(tmp_path / "cache.db"))
+    database.initialize()
+    user = SteamUser("76561198000000001", "Alice")
+    app_info = AppInfo(
+        app_id=10,
+        title="Example Game",
+        app_type="game",
+        store_url="https://store.steampowered.com/app/10/",
+        raw_json='{"type": "game"}',
+    )
+    database.sync_account_apps(user, [app_info])
+
+    summary = database.get_app_summary(10)
+
+    assert summary is not None
+    assert summary.app_id == app_info.app_id
+    assert summary.title == app_info.title
+    assert summary.app_type == app_info.app_type
+    assert summary.raw_json is None
+
+
+def test_sync_preserves_raw_json_when_upsert_has_none(tmp_path: Path) -> None:
+    database = Database(str(tmp_path / "cache.db"))
+    database.initialize()
+    user = SteamUser("76561198000000001", "Alice")
+    stored = AppInfo(
+        app_id=10,
+        title="Example Game",
+        app_type="game",
+        store_url="https://store.steampowered.com/app/10/",
+        raw_json='{"type": "game"}',
+    )
+    database.sync_account_apps(user, [stored])
+
+    summary = database.get_app_summary(10)
+    assert summary is not None
+    database.sync_account_apps(user, [summary])
+
+    assert database.get_app(10) == stored
+
+
 def test_second_sync_with_no_changes_emits_no_new_items(tmp_path: Path) -> None:
     database = Database(str(tmp_path / "cache.db"))
     database.initialize()
