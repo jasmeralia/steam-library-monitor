@@ -69,6 +69,33 @@ class TestRunForeverSurvivesPollFailure:
         assert poll_count == 2
 
 
+class TestCacheHitLookup:
+    """Cache hits use get_app_summary instead of loading raw_json."""
+
+    def test_cache_hit_uses_get_app_summary_not_get_app(self) -> None:
+        config = _make_config()
+        monitor = SteamLibraryMonitor(config)
+
+        owned_game = OwnedGame(app_id=10, title="Test Game")
+        app_info = _make_app_info(10)
+
+        with (
+            patch.object(monitor.database, "start_poll_run", return_value=1),
+            patch.object(monitor.database, "finish_poll_run"),
+            patch.object(monitor.database, "sync_account_apps", return_value=[]),
+            patch.object(
+                monitor.database, "get_app_summary", return_value=app_info
+            ) as mock_summary,
+            patch.object(monitor.database, "get_app") as mock_get_app,
+            patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
+            patch("steam_library_monitor.app.time.sleep"),
+        ):
+            monitor.poll_once()
+
+        mock_summary.assert_called_once_with(10)
+        mock_get_app.assert_not_called()
+
+
 class TestCacheApp:
     """cache_app is called only for apps with a known (non-None) app_type."""
 
@@ -88,7 +115,7 @@ class TestCacheApp:
             patch.object(monitor.database, "start_poll_run", return_value=1),
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
-            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "get_app_summary", return_value=None),
             patch.object(monitor.database, "cache_app") as mock_cache_app,
             patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
             patch.object(monitor.steam_client, "get_app_details", return_value=unknown_app),
@@ -113,7 +140,7 @@ class TestCacheApp:
             patch.object(monitor.database, "start_poll_run", return_value=1),
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
-            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "get_app_summary", return_value=None),
             patch.object(monitor.database, "cache_app") as mock_cache_app,
             patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
             patch.object(monitor.steam_client, "get_app_details", return_value=ad_app),
@@ -138,7 +165,7 @@ class TestAppdetailsDelay:
             patch.object(monitor.database, "start_poll_run", return_value=1),
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
-            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "get_app_summary", return_value=None),
             patch.object(monitor.database, "cache_app"),
             patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
             patch.object(monitor.steam_client, "get_app_details", return_value=app_info),
@@ -160,7 +187,7 @@ class TestAppdetailsDelay:
             patch.object(monitor.database, "start_poll_run", return_value=1),
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
-            patch.object(monitor.database, "get_app", return_value=app_info),
+            patch.object(monitor.database, "get_app_summary", return_value=app_info),
             patch.object(monitor.steam_client, "get_owned_games", return_value=[owned_game]),
             patch("steam_library_monitor.app.time.sleep") as mock_sleep,
         ):
@@ -182,7 +209,7 @@ class TestAppdetailsDelay:
             patch.object(monitor.database, "start_poll_run", return_value=1),
             patch.object(monitor.database, "finish_poll_run"),
             patch.object(monitor.database, "sync_account_apps", return_value=[]),
-            patch.object(monitor.database, "get_app", return_value=None),
+            patch.object(monitor.database, "get_app_summary", return_value=None),
             patch.object(monitor.database, "cache_app"),
             patch.object(monitor.steam_client, "get_owned_games", return_value=owned_games),
             patch.object(

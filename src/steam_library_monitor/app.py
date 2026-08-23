@@ -52,7 +52,7 @@ class SteamLibraryMonitor:
                 cache_hits: dict[int, AppInfo] = {}
                 cache_misses: list[OwnedGame] = []
                 for owned_game in owned_games:
-                    cached = self.database.get_app(owned_game.app_id)
+                    cached = self.database.get_app_summary(owned_game.app_id)
                     if cached is not None:
                         cache_hits[owned_game.app_id] = cached
                     else:
