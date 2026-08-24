@@ -85,6 +85,22 @@ APPDETAILS_DELAY=1.5
 
 `APPDETAILS_DELAY` controls the pause in seconds between consecutive Steam Store API calls when classifying new apps. Apps with a definitive non-game type (e.g. `advertising`, `tool`) are cached so they are not re-fetched on subsequent scans. Apps where the Store API returns no data (`app_type` unknown) are not cached and will be retried each scan. The default of 1.5 seconds keeps the service within Steam's undocumented rate limits. Reduce it only if you have confirmed headroom; set it to 0 to disable the delay entirely.
 
+## Running a single poll (cron mode)
+
+By default the service polls continuously, sleeping for `SLEEP_INTERVAL` seconds between cycles — the right mode for a long-running container. For deployments driven by an external scheduler (e.g. a native cron job), run a single poll cycle and exit instead:
+
+```bash
+python -m steam_library_monitor --once
+```
+
+or equivalently:
+
+```bash
+RUN_ONCE=1 python -m steam_library_monitor
+```
+
+Both forms call `initialize()` once (applying the SQLite schema) and then a single `poll_once()`, then exit. Unlike the continuous loop, a failed poll is not caught and retried — the process exits non-zero so the scheduler can detect and report the failure. `SLEEP_INTERVAL` is ignored in this mode; scheduling is the caller's responsibility. `DATABASE_PATH` should point at a stable, persistent path across runs so the cache survives between invocations.
+
 ## Development
 
 ```bash
