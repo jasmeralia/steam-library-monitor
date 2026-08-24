@@ -1,9 +1,8 @@
 requests==2.34.2
+python-dotenv==1.2.2
 pytest==9.1.1
 pytest-cov==7.1.0
 ruff==0.16.4
 mypy==2.3.1
 pylint==4.0.7
 types-requests==2.33.0.20260712
-
-pydantic-settings>=2.15.0
