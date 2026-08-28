@@ -30,3 +30,4 @@ library-cache.db
 # Local agent/tool state
 .serena/
 .codex/
+.kanna
