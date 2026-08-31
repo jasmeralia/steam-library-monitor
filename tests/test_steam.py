@@ -95,6 +95,39 @@ def test_parses_release_year_from_appdetails() -> None:
     assert app.release_year == 2020
 
 
+def test_parses_header_image_from_appdetails() -> None:
+    session = FakeSession(
+        [
+            {
+                "10": {
+                    "success": True,
+                    "data": {
+                        "type": "game",
+                        "name": "Example Game",
+                        "header_image": "https://example.com/header.jpg?t=1",
+                    },
+                }
+            }
+        ]
+    )
+    client = SteamClient("secret", session=session)
+
+    app = client.get_app_details(10, "Fallback")
+
+    assert app.header_image_url == "https://example.com/header.jpg?t=1"
+
+
+def test_header_image_url_missing_when_absent_from_appdetails() -> None:
+    session = FakeSession(
+        [{"10": {"success": True, "data": {"type": "game", "name": "Example Game"}}}]
+    )
+    client = SteamClient("secret", session=session)
+
+    app = client.get_app_details(10, "Fallback")
+
+    assert app.header_image_url is None
+
+
 def test_parses_appdetails_dlc_response_with_base_game() -> None:
     session = FakeSession(
         [
