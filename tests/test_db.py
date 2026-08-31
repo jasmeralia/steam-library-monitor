@@ -55,6 +55,25 @@ def test_migration_adds_release_year_to_existing_db(tmp_path: Path) -> None:
     with sqlite3.connect(db_path) as connection:
         columns = {row[1] for row in connection.execute("PRAGMA table_info(apps)")}
     assert "release_year" in columns
+    assert "header_image_url" in columns
+
+
+def test_get_app_round_trips_header_image_url(tmp_path: Path) -> None:
+    database = Database(str(tmp_path / "cache.db"))
+    database.initialize()
+    user = SteamUser("76561198000000001", "Alice")
+    app_info = AppInfo(
+        app_id=10,
+        title="Example Game",
+        app_type="game",
+        store_url="https://store.steampowered.com/app/10/",
+        header_image_url="https://example.com/header.jpg?t=1",
+    )
+
+    database.sync_account_apps(user, [app_info])
+
+    assert database.get_app(10) == app_info
+    assert database.get_app_summary(10) == app_info
 
 
 def test_first_sync_inserts_baseline_without_notification(tmp_path: Path) -> None:

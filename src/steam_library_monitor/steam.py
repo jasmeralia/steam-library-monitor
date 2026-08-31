@@ -144,6 +144,7 @@ class SteamClient:
             base_title=str(base_title) if base_title else None,
             raw_json=json.dumps(app_payload, sort_keys=True),
             release_year=release_year,
+            header_image_url=str(data["header_image"]) if data.get("header_image") else None,
         )
 
 

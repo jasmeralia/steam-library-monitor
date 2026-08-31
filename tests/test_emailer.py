@@ -37,6 +37,24 @@ def test_app_info_cover_url() -> None:
     assert app.cover_url == "https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg"
 
 
+def test_app_info_cover_url_prefers_header_image_url() -> None:
+    app = AppInfo(
+        app_id=3823650,
+        title="LUCKROT",
+        app_type="game",
+        store_url="https://store.steampowered.com/app/3823650/",
+        header_image_url=(
+            "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/"
+            "3823650/f873f0fd540665e53943fac68b83d34e95e5cdba/header.jpg?t=1777258131"
+        ),
+    )
+
+    assert app.cover_url == (
+        "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/"
+        "3823650/f873f0fd540665e53943fac68b83d34e95e5cdba/header.jpg?t=1777258131"
+    )
+
+
 def test_render_digest_groups_by_account_and_type() -> None:
     body = render_digest(
         [

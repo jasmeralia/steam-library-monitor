@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS apps (
     base_title TEXT,
     raw_json TEXT,
     release_year INTEGER,
+    header_image_url TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -67,10 +69,21 @@ class Database:
         connection.execute("PRAGMA foreign_keys = ON")
         return connection
 
+    @contextmanager
+    def _session(self) -> Iterator[sqlite3.Connection]:
+        """Open a connection, commit/rollback on exit, and always close it."""
+
+        connection = self.connect()
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
+
     def initialize(self) -> None:
         """Create database schema if needed."""
 
-        with self.connect() as connection:
+        with self._session() as connection:
             connection.executescript(SCHEMA)
             _apply_migrations(connection)
 
@@ -78,7 +91,7 @@ class Database:
         """Record a poll run start and return its row id."""
 
         now = utc_now()
-        with self.connect() as connection:
+        with self._session() as connection:
             cursor = connection.execute(
                 "INSERT INTO poll_runs (started_at, status) VALUES (?, ?)",
                 (now, "running"),
@@ -90,7 +103,7 @@ class Database:
     def finish_poll_run(self, run_id: int, status: str, message: str | None = None) -> None:
         """Mark a poll run complete."""
 
-        with self.connect() as connection:
+        with self._session() as connection:
             connection.execute(
                 """
                 UPDATE poll_runs
@@ -104,17 +117,17 @@ class Database:
         """Persist app metadata without linking it to any account."""
 
         now = utc_now()
-        with self.connect() as connection:
+        with self._session() as connection:
             _upsert_app(connection, app, now)
 
     def get_app(self, app_id: int) -> AppInfo | None:
         """Return stored app metadata for app_id, if present."""
 
-        with self.connect() as connection:
+        with self._session() as connection:
             row = connection.execute(
                 """
                 SELECT app_id, title, app_type, store_url, base_app_id,
-                    base_title, raw_json, release_year
+                    base_title, raw_json, release_year, header_image_url
                 FROM apps
                 WHERE app_id = ?
                 """,
@@ -127,11 +140,11 @@ class Database:
     def get_app_summary(self, app_id: int) -> AppInfo | None:
         """Return stored app metadata without loading the raw_json blob."""
 
-        with self.connect() as connection:
+        with self._session() as connection:
             row = connection.execute(
                 """
                 SELECT app_id, title, app_type, store_url, base_app_id,
-                    base_title, release_year
+                    base_title, release_year, header_image_url
                 FROM apps
                 WHERE app_id = ?
                 """,
@@ -154,7 +167,7 @@ class Database:
 
         app_list = list(apps)
         now = utc_now()
-        with self.connect() as connection:
+        with self._session() as connection:
             existed = _account_exists(connection, user.steam_id)
             _upsert_account(connection, user, now)
             new_items: list[NewApp] = []
@@ -216,6 +229,8 @@ def _apply_migrations(connection: sqlite3.Connection) -> None:
     existing = {row[1] for row in connection.execute("PRAGMA table_info(apps)")}
     if "release_year" not in existing:
         connection.execute("ALTER TABLE apps ADD COLUMN release_year INTEGER")
+    if "header_image_url" not in existing:
+        connection.execute("ALTER TABLE apps ADD COLUMN header_image_url TEXT")
 
 
 def _app_info_from_row(row: sqlite3.Row, *, include_raw_json: bool) -> AppInfo:
@@ -228,6 +243,7 @@ def _app_info_from_row(row: sqlite3.Row, *, include_raw_json: bool) -> AppInfo:
         base_title=row["base_title"],
         raw_json=row["raw_json"] if include_raw_json else None,
         release_year=row["release_year"],
+        header_image_url=row["header_image_url"],
     )
 
 
@@ -252,9 +268,9 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
         """
         INSERT INTO apps (
             app_id, title, app_type, store_url, base_app_id, base_title,
-            raw_json, release_year, created_at, updated_at
+            raw_json, release_year, header_image_url, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(app_id) DO UPDATE SET
             title = excluded.title,
             app_type = excluded.app_type,
@@ -263,6 +279,7 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
             base_title = excluded.base_title,
             raw_json = COALESCE(excluded.raw_json, apps.raw_json),
             release_year = excluded.release_year,
+            header_image_url = excluded.header_image_url,
             updated_at = excluded.updated_at
         """,
         (
@@ -274,6 +291,7 @@ def _upsert_app(connection: sqlite3.Connection, app: AppInfo, now: str) -> None:
             app.base_title,
             raw_json,
             app.release_year,
+            app.header_image_url,
             now,
             now,
         ),
