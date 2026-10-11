@@ -5,4 +5,4 @@ pytest-cov==7.1.0
 ruff==0.16.10
 mypy==2.4.0
 pylint==4.1.1
-types-requests==2.33.0.20260906
+types-requests==2.33.0.20261006
